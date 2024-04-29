@@ -1,0 +1,9 @@
+# Carpetas generadas por NetBeans
+nbproject/
+build/
+dist/
+nbbuild/
+nbdist/
+
+# Archivo .dot de Graphviz
+*.dot
