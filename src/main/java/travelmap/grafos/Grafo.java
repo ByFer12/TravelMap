@@ -20,6 +20,7 @@ import javax.swing.JOptionPane;
 
 
 public class Grafo {
+    public  String tipoPeso;
     public Map<String, Nodo> nodos;
 
     public Grafo() {
@@ -42,61 +43,45 @@ public class Grafo {
         }
     }
        
-    public List<Nodo> ejecutar(String origenId, String destinoId) {
-        if (!nodos.containsKey(origenId) || !nodos.containsKey(destinoId)) {
-            JOptionPane.showMessageDialog(null, "Nodo de origen o destino no encontrado en el grafo");
-            return null;
+   public Map<Integer, List<Nodo>> encontrarTodasLasRutas(String origenId, String destinoId) {
+    if (!nodos.containsKey(origenId) || !nodos.containsKey(destinoId)) {
+        JOptionPane.showMessageDialog(null, "Nodo de origen o destino no encontrado en el grafo");
+        return null;
+    }
+
+    Nodo origen = nodos.get(origenId);
+    Nodo destino = nodos.get(destinoId);
+    Map<Integer, List<Nodo>> todasLasRutas = new HashMap<>();
+    List<Nodo> rutaActual = new ArrayList<>();
+    rutaActual.add(origen);
+    encontrarRutasRecursivamente(origen, destino, rutaActual, todasLasRutas);
+    return todasLasRutas;
+}
+
+private void encontrarRutasRecursivamente(Nodo nodoActual, Nodo destino, List<Nodo> rutaActual, Map<Integer, List<Nodo>> todasLasRutas) {
+    if (nodoActual.equals(destino)) {
+        // Se ha encontrado una ruta completa
+        List<Nodo> rutaCompletaConPesos = new ArrayList<>(rutaActual);
+        int sumaPesos = 0;
+        for (int i = 0; i < rutaCompletaConPesos.size() - 1; i++) {
+            Nodo nodoOrigen = rutaCompletaConPesos.get(i);
+            Nodo nodoDestino = rutaCompletaConPesos.get(i + 1);
+            Arista arista = nodoOrigen.getAristaConDestino(nodoDestino);
+            sumaPesos += arista.getPesos().get(tipoPeso);
         }
-
-        Nodo origen = nodos.get(origenId);
-        Nodo destino = nodos.get(destinoId);
-
-        Map<Nodo, Integer> distancias = new HashMap<>();
-        Map<Nodo, Nodo> antecesores = new HashMap<>();
-        Set<Nodo> visitados = new HashSet<>();
-
-        // Inicializar distancias: todas son infinito excepto el nodo origen
-        for (Nodo nodo : nodos.values()) {
-            distancias.put(nodo, Integer.MAX_VALUE);
-        }
-        distancias.put(origen, 0);
-
-        // Implementación del algoritmo de Dijkstra
-        PriorityQueue<Nodo> colaPrioridad = new PriorityQueue<>(Comparator.comparingInt(distancias::get));
-        colaPrioridad.add(origen);
-
-        while (!colaPrioridad.isEmpty()) {
-            Nodo actual = colaPrioridad.poll();
-            if (visitados.contains(actual)) continue;
-            visitados.add(actual);
-
-            for (Arista arista : actual.getAristas()) {
-                Nodo vecino = arista.getDestino();
-                if (visitados.contains(vecino)) continue;
-
-                int nuevaDistancia = distancias.get(actual) + arista.getPesos().get("distancia");
-                
-                if (nuevaDistancia < distancias.get(vecino)) {
-                System.out.println("Distancias: "+nuevaDistancia);
-                    distancias.put(vecino, nuevaDistancia);
-                    antecesores.put(vecino, actual); // Registrar predecesor para reconstruir la ruta
-                    colaPrioridad.add(vecino);
-                }
+        todasLasRutas.put(sumaPesos, rutaCompletaConPesos);
+    } else {
+        // Explorar todas las aristas salientes del nodo actual
+        for (Arista arista : nodoActual.getAristas()) {
+            Nodo vecino = arista.getDestino();
+            if (!rutaActual.contains(vecino)) {
+                rutaActual.add(vecino);
+                encontrarRutasRecursivamente(vecino, destino, rutaActual, todasLasRutas);
+                rutaActual.remove(rutaActual.size() - 1); // Retroceder al nivel anterior
             }
         }
-
-        // Reconstruir la ruta óptima desde el nodo destino hasta el nodo origen
-        List<Nodo> rutaOptima = new ArrayList<>();
-        Nodo nodo = destino;
-        while (nodo != null) {
-            rutaOptima.add(nodo);
-            nodo = antecesores.get(nodo);
-        }
-        Collections.reverse(rutaOptima); // Invertir la lista para obtener la ruta desde origen hasta destino
-
-        return rutaOptima;
     }
-    
+}
     public void modificarArista(String origen, String destino,  Map<String, Integer>pesos){
         if(nodos.containsKey(origen)&&nodos.containsKey(destino)){
             Nodo origin =nodos.get(origen);

@@ -41,12 +41,13 @@ public class Principal extends javax.swing.JFrame {
     private int minutos = 0;
     private int segundos = 0;
     Timer timer;
-     public Map<String, Nodo>nodo;
+    public Map<String, Nodo> nodo;
     private final int segundosPorMinuto = 15;
     private final int minutosPorHora = 60;
     private final int horasEnDia = 24;
-    public boolean isChecked=false;
+    public boolean isChecked = false;
     private DecimalFormat formatoHora = new DecimalFormat("00");
+    Map<Integer, List<Nodo>> rutaOptima;
 
     public Principal() {
 
@@ -272,7 +273,7 @@ public class Principal extends javax.swing.JFrame {
                         .addComponent(txtMinuto, javax.swing.GroupLayout.PREFERRED_SIZE, 81, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jButton1)))
-                .addContainerGap(15, Short.MAX_VALUE))
+                .addContainerGap(46, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -344,9 +345,9 @@ public class Principal extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(agregarImagen, javax.swing.GroupLayout.DEFAULT_SIZE, 1197, Short.MAX_VALUE)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(agregarImagen, javax.swing.GroupLayout.PREFERRED_SIZE, 1160, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -452,33 +453,23 @@ public class Principal extends javax.swing.JFrame {
     }//GEN-LAST:event_jCheckBox1ItemStateChanged
 
     private void calcularRutaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_calcularRutaActionPerformed
+        if (nodoOrigen.getItemCount() != 0 && nodoDestino.getItemCount() != 0) {
 
-        String origen = nodoOrigen.getSelectedItem().toString();
-        String destino = nodoDestino.getSelectedItem().toString();
-       List<Nodo> rutaOptima = Archive.g.ejecutar(origen, destino);
-    if (rutaOptima != null) {
-        System.out.println("Ruta más óptima desde " + origen + " hasta " + destino + ":");
-        for (int i = 0; i < rutaOptima.size(); i++) {
-            Nodo nodo = rutaOptima.get(i);
-            System.out.print(nodo.getDato());
-            if (i < rutaOptima.size() - 1) {
-                System.out.print(" -> ");
+            String origen = nodoOrigen.getSelectedItem().toString();
+            String destino = nodoDestino.getSelectedItem().toString();
+
+            int opcion = tipoVehiculo.getSelectedIndex();
+            int mejorRuta=calcularCombo.getSelectedIndex();
+            if (opcion == 0) {
+                vehicleCalculator(mejorRuta, origen, destino);
+
+            } else {
+                walkingCalculator(mejorRuta, origen, destino);
+
             }
+        }else{
+            JOptionPane.showMessageDialog(null, "Aun no hay Origen ni Destino, verifique");
         }
-        nodo=Archive.g.nodos;
-        
-        Archive.g.graficar("grafo.dot", "grafo");
-       
-        System.out.println(); // Nueva línea al final para separar la salida
-    }
-//            int opcion=tipoVehiculo.getSelectedIndex();
-//        if(opcion==0){
-//            vehicleCalculator(opcion, origen, destino);
-//           
-//       }else{
-//            walkingCalculator(opcion, origen, destino);
-//            
-//        }
     }//GEN-LAST:event_calcularRutaActionPerformed
 
     public void graficar(String nombreArchivoDot, String nombreImagen) {
@@ -500,10 +491,10 @@ public class Principal extends javax.swing.JFrame {
                     }
                     labelBuilder.append("]");
 
-            System.out.println("Elementos dentro del StringBuilder "+labelBuilder);
+                    System.out.println("Elementos dentro del StringBuilder " + labelBuilder);
                     // Escribir la línea DOT para la arista con el label construido
                     writer.printf("  %s -> %s ",
-                                  nod.getDato(), arista.getDestino().getDato());
+                            nod.getDato(), arista.getDestino().getDato());
                 }
             }
 
@@ -515,14 +506,45 @@ public class Principal extends javax.swing.JFrame {
         // Generar la imagen a partir del archivo DOT usando Graphviz
         Archive.g.generarImagenDesdeDot(nombreArchivoDot, nombreImagen);
     }
+
     private void vehicleCalculator(int tipoVijaje, String origen, String destino) {
         System.out.println("VEHICULO");
         switch (tipoVijaje) {
             case 0:
-                System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
+                System.out.println("GASOLINA*****");
+                Archive.g.tipoPeso = "consumoGas";
+                rutaOptima = Archive.g.encontrarTodasLasRutas(origen, destino);
+                for (Map.Entry<Integer, List<Nodo>> entrada : rutaOptima.entrySet()) {
+                    Integer sumaPesos = entrada.getKey();
+                    List<Nodo> ruta = entrada.getValue();
+
+                    System.out.println("Ruta: " + sumaPesos);
+
+                    // Recorrer la lista de nodos de la ruta
+                    for (Nodo nodo : ruta) {
+                        System.out.print(nodo.getDato() + "->");
+                    }
+
+                    System.out.println("\n-------------------");
+                }
                 break;
             case 1:
-                System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
+                System.out.println("DISTANCIA*****");
+                Archive.g.tipoPeso = "distancia";
+                Map<Integer, List<Nodo>> rutaOptima = Archive.g.encontrarTodasLasRutas(origen, destino);
+                for (Map.Entry<Integer, List<Nodo>> entrada : rutaOptima.entrySet()) {
+                    Integer sumaPesos = entrada.getKey();
+                    List<Nodo> ruta = entrada.getValue();
+
+                    System.out.println("Ruta: " + sumaPesos);
+
+                    // Recorrer la lista de nodos de la ruta
+                    for (Nodo nodo : ruta) {
+                        System.out.print(nodo.getDato() + "->");
+                    }
+
+                    System.out.println("\n-------------------");
+                }
                 break;
             case 2:
                 System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
@@ -542,10 +564,40 @@ public class Principal extends javax.swing.JFrame {
         System.out.println("CAMINANDO");
         switch (tipoVijaje) {
             case 0:
-                System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
+                System.out.println("DESGASTE#####");
+                Archive.g.tipoPeso = "desgastePersona";
+                rutaOptima = Archive.g.encontrarTodasLasRutas(origen, destino);
+                for (Map.Entry<Integer, List<Nodo>> entrada : rutaOptima.entrySet()) {
+                    Integer sumaPesos = entrada.getKey();
+                    List<Nodo> ruta = entrada.getValue();
+
+                    System.out.println("Ruta: " + sumaPesos);
+
+                    // Recorrer la lista de nodos de la ruta
+                    for (Nodo nodo : ruta) {
+                        System.out.print(nodo.getDato() + "->");
+                    }
+
+                    System.out.println("\n-------------------");
+                }
                 break;
             case 1:
-                System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
+                 System.out.println("DISTANCIA#####");
+                Archive.g.tipoPeso = "distancia";
+                rutaOptima = Archive.g.encontrarTodasLasRutas(origen, destino);
+                for (Map.Entry<Integer, List<Nodo>> entrada : rutaOptima.entrySet()) {
+                    Integer sumaPesos = entrada.getKey();
+                    List<Nodo> ruta = entrada.getValue();
+
+                    System.out.println("Ruta: " + sumaPesos);
+
+                    // Recorrer la lista de nodos de la ruta
+                    for (Nodo nodo : ruta) {
+                        System.out.print(nodo.getDato() + "->");
+                    }
+
+                    System.out.println("\n-------------------");
+                }
                 break;
             case 2:
                 System.out.println("Seleccionaste el Item: " + tipoVijaje + " Origen: " + origen + " Destino: " + destino);
