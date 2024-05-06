@@ -13,15 +13,14 @@ import travelmap.grafos.Grafo;
 public class TravelMap {
 
     public static void main(String[] args) {
-        Principal p=new Principal();
-        p.setSize(1478, 1000);
+        Principal p = new Principal();
+        p.setSize(1878, 1060);
         p.setVisible(true);
         p.setLocationRelativeTo(null);
         //pruebas();
     }
-    
-    
-    public static void pruebas(){
+
+    public static void pruebas() {
 //        Grafo grafo = new Grafo();
 //
 //        // Agregar nodos al grafo

@@ -1,12 +1,18 @@
 package travelmap.utils;
 
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Image;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import travelmap.grafos.Grafo;
 
 /**
@@ -19,15 +25,15 @@ public class Archive implements IArchive {
     public static Grafo g = new Grafo();
 
     @Override
-    public void readArchive(String archive, JLabel label) {
+    public void readArchive(String archive) {
         try (BufferedReader br = new BufferedReader(new FileReader(archive))) {
             String linea = "";
             while ((linea = br.readLine()) != null) {
                 String[] datos = linea.split("\\|");
                 String origen = datos[0];
                 String destino = datos[1];
-                Map<String, Integer> pesos=new LinkedHashMap<>();
-                
+                Map<String, Integer> pesos = new LinkedHashMap<>();
+
                 pesos.put("tiempoVehiculo", Integer.parseInt(datos[2]));
                 pesos.put("tiempoPie", Integer.parseInt(datos[3]));
                 pesos.put("consumoGas", Integer.parseInt(datos[4]));
@@ -39,26 +45,28 @@ public class Archive implements IArchive {
 
             }
 
-        } catch (IOException e) {
+        } catch (IOException | ArrayIndexOutOfBoundsException e) {
+            System.out.println(e.getMessage());
 
         }
         g.graficar("grafo.dot", "grafo");
-       //label.setIcon(new javax.swing.ImageIcon("/home/tuxrex/NetBeansProjects/Web/TravelMap/grafo.jpeg"));
+        //label.setIcon(new javax.swing.ImageIcon("/home/tuxrex/NetBeansProjects/Web/TravelMap/grafo.jpeg"));
         System.out.println("Grafo generado correctamente.");
     }
-    
-        public void addMoreArchive(String archive, JLabel label) {
+
+    @Override
+    public void addMoreArchive(String archive) {
         try (BufferedReader br = new BufferedReader(new FileReader(archive))) {
             String linea = "";
             while ((linea = br.readLine()) != null) {
                 String[] datos = linea.split("\\|");
                 String origen = datos[0];
                 String destino = datos[1];
-                Map<String,Integer>pesos=new LinkedHashMap<>();
-                
+                Map<String, Integer> pesos = new LinkedHashMap<>();
+
                 pesos.put("horaInicio", Integer.parseInt(datos[2]));
                 pesos.put("horaFin", Integer.parseInt(datos[3]));
-                pesos.put("probabilidad",Integer.parseInt(datos[4]));
+                pesos.put("probabilidad", Integer.parseInt(datos[4]));
                 g.modificarArista(origen, destino, pesos);
 
             }
@@ -67,7 +75,8 @@ public class Archive implements IArchive {
 
         }
         g.graficar("grafo.dot", "grafo");
-       label.setIcon(new javax.swing.ImageIcon("/home/tuxrex/NetBeansProjects/Web/TravelMap/grafo.jpeg"));
+
+        // Agrega el JScrollPane al contenedor principal
         System.out.println("Grafo generado correctamente.");
     }
 
